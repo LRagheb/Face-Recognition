@@ -118,7 +118,7 @@ def project(x, w):
 
 #perform KNN on the test set and return the accuracy
 def KNN(test_faces, test_labels, train_faces, train_labels, k):
-    knn = KNeighborsClassifier(n_neighbors=k, weights = 'unifrom')
+    knn = KNeighborsClassifier(n_neighbors=k, weights = 'uniform')
     knn.fit(train_faces, train_labels)
     #get the prediction for each image in the test set
     predictions = knn.predict(test_faces)
@@ -145,8 +145,10 @@ def accuracy_against_Kneighbors(x_train, x_test, y_train, y_test):
     
 
 def main():
+    pathY=r"E:\Documents\Term 8\Pattern Recognition\assignments\assignment 1\Data"
+    pathL=r"D:\College\term 8\Pattern Recognition\Project1-branch\Face-Recognition\Data"
     folder_name = r"E:\Documents\Term 8\Pattern Recognition\assignments\assignment 1\Data"
-    faces, labels = prepare_data_set(folder_name)
+    faces, labels = prepare_data_set(pathL)
     faces = np.asarray(faces)
     labels = np.asarray(labels)
     #split data to training and test sets
@@ -200,9 +202,22 @@ def main():
         Atest=reduced.T.dot(test_faces.T)
         Atest=Atest.T
         print("accuracy= ", KNN(Atest, test_labels, Atrain, train_labels,1),"%\n\n") #nearest neighbour and accuracy per alpha
-
-    #plot accuracy for PCA with different number of neighbors
-    accuracy_against_Kneighbors(Atrain, Atest, train_labels, test_labels)
+        #plot accuracy for PCA with different number of neighbors
+        accuracy_against_Kneighbors(Atrain, Atest, train_labels, test_labels)
     
     #PCA on (7-3) train-test data
+    #splitted data already exists from the LDA step
+    # X_train, X_test, y_train, y_test
+    print("\n\nPCA on (7-3) train-test data:")
+    reducedDNew,vecsNew=PCA(X_train,alpha) 
+    for alph,dim in zip(alpha,reducedDNew):
+        reducedNew=vecs[:,:int(dim)+1]
+        AtrainNew=reducedNew.T.dot(X_train.T)
+        AtrainNew=AtrainNew.T
+        AtestNew=reducedNew.T.dot(X_test.T)
+        AtestNew=AtestNew.T
+        print("accuracy= ", KNN(AtestNew,y_test, AtrainNew,y_train,1),"%\n\n")
+        
+        
+    
 
