@@ -8,6 +8,7 @@ import os
 import numpy as np
 from PIL import Image
 from sklearn.neighbors import KNeighborsClassifier
+from sklearn.neighbors import NearestNeighbors
 from sklearn import metrics
 import matplotlib.pyplot as plt
 from PCA import PCA
@@ -34,6 +35,22 @@ def prepare_data_set(path):
                
             l = l + 1
     return faces, labels
+
+def prepare(path):
+ #list to hold all subject faces
+    faces = []
+    #list to hold labels for each subject
+    labels = []
+    l = 1    
+    for filename in os.listdir(path):
+                img = Image.open(os.path.join(path , filename)).convert('L') 
+                faces.append(np.asarray(img).ravel())
+                labels.append(filename)
+
+               
+    return faces, labels
+    
+    
 
 #function to split data into training set and tests set 50-50
 def split_data(faces , labels):
@@ -143,6 +160,14 @@ def accuracy_against_Kneighbors(x_train, x_test, y_train, y_test):
     plt.xlabel('numbers of neighbors')
     plt.show()
     
+def nonFaces(trainD,trainL,testD,testL):
+    nbrs=NearestNeighbors(n_neighbors=1,metric='euclidean').fit(trainD)
+    distances,indices=nbrs.kneighbors(testD)
+    
+    return distances
+    
+    
+    
 
 def main():
     pathY=r"E:\Documents\Term 8\Pattern Recognition\assignments\assignment 1\Data"
@@ -204,6 +229,39 @@ def main():
         print("accuracy= ", KNN(Atest, test_labels, Atrain, train_labels,1),"%\n\n") #nearest neighbour and accuracy per alpha
         #plot accuracy for PCA with different number of neighbors
         accuracy_against_Kneighbors(Atrain, Atest, train_labels, test_labels)
+        
+    #Faces VS nonFaces
+    #trial and error->maxDistance=3858
+    #create new test array of faces (from ORL dataset and random faces from internet)
+    testNF,labelsNF=prepare(r"D:\College\term 8\Pattern Recognition\Project1-branch\Face-Recognition\faces")
+    #get distance to nearest neighbour (of ORL dataset)
+    testNF = np.asarray(testNF) #project first
+    labelsNF = np.asarray(labelsNF)
+    Atest=reduced.T.dot(testNF.T)
+    Atest=Atest.T
+    distance= nonFaces(Atrain,train_labels,Atest,labelsNF)
+    maxdistance=np.amax(distance) #farthest face to all faces is the max distance
+    #Use random set of faces and non faces:
+    testNF,labelsNF=prepare(r"D:\College\term 8\Pattern Recognition\Project1-branch\Face-Recognition\Random")
+    testNF = np.asarray(testNF) #project first
+    labelsNF = np.asarray(labelsNF)
+    Atest=reduced.T.dot(testNF.T)
+    Atest=Atest.T
+    distance= nonFaces(Atrain,train_labels,Atest,labelsNF)
+    
+    
+    print("Max Distance= ",maxdistance)
+    #if distance larger than max distance->not a face
+    i=0
+    for d in np.nditer(distance):
+        if d>maxdistance:
+            print(labelsNF[i]," Not a face. D= ",d)
+        else:
+            print(labelsNF[i]," face D= ",d)
+        i+=1
+
+    
+   
     
     #PCA on (7-3) train-test data
     #splitted data already exists from the LDA step
